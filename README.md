@@ -42,6 +42,11 @@ python -m venv myenv         # create virtual environment
 # Mac/Linux: source myenv/bin/activate
 pip install -r requirements.txt
 
+##Create a .env file:
+GEMINI_API_KEY=<YOUR_GOOGLE_GEMINI_API_KEY>
+DATABASE_URL=postgresql://username:password@localhost:5432/atslaunchpad
+
+
 
 
 
