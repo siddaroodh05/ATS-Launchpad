@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 
 class MCQ(BaseModel):
     question: str
@@ -17,4 +17,22 @@ class AnalysisResult(BaseModel):
     job_matches: List[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True  
+class UserCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+# Sub-schema to hold the user details in the token response
+class UserInfo(BaseModel):
+    name: str
+    email: EmailStr
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserInfo  

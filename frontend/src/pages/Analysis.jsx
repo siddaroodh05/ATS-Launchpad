@@ -189,7 +189,7 @@ function Analysis() {
 
             <button className="bottom-btn outline-btn" onClick={handlePreview}>
               <Eye size={18} />
-              <span>Preview & Print</span>
+              <span>Download</span>
             </button>
           </section>
         </main>

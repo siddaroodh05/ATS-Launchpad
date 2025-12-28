@@ -9,6 +9,7 @@ import ResultsPage from "./pages/ResultsPage";
 import JobFitAnalysis from "./pages/JobFitAnalysis";
 import JobMatchesHome from "./pages/JobMatchesHome";
 import JobMatchListings from "./pages/JobMatchListings";
+import Auth from "./pages/Login";
 import "./App.css";
 
 function App() {
@@ -28,11 +29,12 @@ function App() {
             <Route path="/job-fit/analysis/:id" element={<JobFitAnalysis />} />
             <Route path="/job-matches" element={<JobMatchesHome />} />
             <Route path="/job-matches/listings/:resumeId" element={<JobMatchListings />} />
+            <Route path="/login" element={<Auth />} />
           </Routes>
         </div>
 
         <footer className="app-footer">
-          &copy; {new Date().getFullYear()} YourCompanyName. All rights reserved.
+          &copy; {new Date().getFullYear()} Siddaroodh venkatapur. All rights reserved.
         </footer>
       </div>
     </BrowserRouter>

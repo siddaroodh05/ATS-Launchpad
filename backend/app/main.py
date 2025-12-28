@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .resume import router as resume_router
-from app.routes import analysis, mcq
+from app.routes import analysis, mcq,auth
 from app.routes.job_match_routes import router as job_router
 
 Base.metadata.create_all(bind=engine)
@@ -16,7 +16,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.include_router(auth.router)
 @app.get("/")
 async def root():
     return {"message": "ATSLaunchPod API is running"}
