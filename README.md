@@ -1,12 +1,26 @@
 # ATS Launchpad — Full-Stack Resume Analyzer & Job-Fit Platform
 
-This repository contains a full-stack application that analyzes resumes and matches candidates to jobs. The project now includes secure authentication and secrets are no longer stored in the repository. This README explains how to recreate the development environment and secrets locally.
+This repository contains a full-stack application that analyzes resumes and matches candidates to jobs. The project now includes secure authentication and secrets are no longer stored in the repository. This README explains how to recreate the development environment and secrets locally, and lists both the original project features and the new authentication features.
 
 ## Prerequisites
 
 - Python 3.11+
 - Node.js (LTS) & npm
 - Git
+
+## Existing Features
+
+These are the original capabilities of ATS Launchpad that the project shipped with:
+
+- Resume upload and parsing (PDF/DOCX)
+- Keyword and skill extraction
+- Candidate scoring and job-fit matching
+- Job posting creation and management
+- Candidate profile pages and CV viewer
+- Search and filter candidates by skills, experience, location
+- Bulk CSV import/export for candidates and jobs
+- Admin dashboard for managing users and reviewing matches
+- Basic analytics and reporting (match rates, top skills)
 
 ## Backend Setup
 
@@ -53,7 +67,7 @@ This repository contains a full-stack application that analyzes resumes and matc
      python -c "import secrets; print(secrets.token_urlsafe(32))"
      ```
 
-6. Run database migrations or initialization (if applicable).
+6. Run database migrations or initialization (if applicable for your stack).
 
 7. Start the backend server (example using Uvicorn / FastAPI — adjust command to your framework):
 
@@ -88,35 +102,4 @@ Notes
 
 4. Open the app in your browser (usually http://localhost:3000 or as printed by the dev server).
 
-## Project Structure (important files for Auth)
 
-- backend/app/routes/auth.py — Contains Login and Signup endpoints.
-- backend/app/services/auth_service.py — Handles password hashing and JWT token generation.
-- frontend/src/pages/Login.jsx — The user interface for logging in.
-
-Use these files as the primary reference when updating or debugging authentication logic.
-
-## Features
-
-- Secure Password Hashing (using Bcrypt)
-- JWT Authentication (JSON Web Tokens)
-- Protected Routes (only authenticated users can access certain pages)
-
-## Security & Best Practices
-
-- Keep `.env` and virtual environments out of version control.
-- Rotate secrets if you believe they were exposed.
-- Use a secrets manager for production deployments (AWS Secrets Manager, Azure Key Vault, etc.).
-
-## Contributing
-
-If you want to contribute, fork the repository, create a feature branch, and open a pull request describing your changes.
-
-## Troubleshooting
-
-- If you hit dependency issues, ensure Python and Node versions match the prerequisites.
-- If authentication fails, check the `.env` values (especially `SECRET_KEY` and `DATABASE_URL`) and ensure the backend has access to the database.
-
----
-
-If you want, I can also add example Postman requests for login/signup or provide scripts to automate env creation.
