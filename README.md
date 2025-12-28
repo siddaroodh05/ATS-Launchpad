@@ -77,8 +77,6 @@ These are the original capabilities of ATS Launchpad that the project shipped wi
 
    Adjust the module path if your app entry point differs.
 
-Notes
-- Do NOT commit `myenv` or `.env` to the repository. These are ignored intentionally to protect secrets and reduce repository size.
 
 ## Frontend Setup
 
