@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { extractTextFromPDF } from "../utils/pdfExtractor"; 
 import "../styles/UploadResume.css";
+import { ENDPOINTS } from "../api";
 
 export default function UploadResume() {
   const [file, setFile] = useState(null);
@@ -27,7 +28,7 @@ export default function UploadResume() {
       const text = await extractTextFromPDF(file);
 
       // Send data to backend
-      await axios.post("http://127.0.0.1:8000/resume/analyze-text", {
+      await axios.post(ENDPOINTS.ANALYZE_TEXT, {
         id: customId,
         extracted_text: text,
         filename: file.name,

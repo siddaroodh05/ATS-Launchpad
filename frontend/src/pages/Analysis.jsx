@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/Analysis.css";
 import { Target, Briefcase, HelpCircle, Eye } from "lucide-react";
+import { ENDPOINTS } from "../api";
 
 function Analysis() {
   const { id } = useParams();
@@ -16,8 +17,7 @@ function Analysis() {
     const fetchAnalysisData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `http://127.0.0.1:8000/resume/analysis/${id}`
+        const response = await axios.get(`${ENDPOINTS.GET_ANALYSIS}/${id}`
         );
         setData(response.data.analysis_result);
       } catch (err) {
@@ -43,7 +43,7 @@ function Analysis() {
 
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/resume/analysis/${id}/download-pdf`,
+        `${ENDPOINTS.DOWNLOAD_PDF}/${id}/download-pdf`,
         { responseType: "blob" }
       );
 

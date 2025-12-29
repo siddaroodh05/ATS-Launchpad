@@ -7,7 +7,8 @@ import {
   Target,
   ArrowLeft
 } from "lucide-react";
-import "../styles/Analysis.css";
+import "../styles/jobFitAnalysis.css";
+import { ENDPOINTS } from "../api";
 
 export default function JobFitAnalysis() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function JobFitAnalysis() {
         setLoading(true);
 
         const response = await axios.get(
-          `http://127.0.0.1:8000/analysis/analysis-result/${id}`
+          `${ENDPOINTS.RESULT_BY_ID}/${id}`
         );
 
         const backendData = response.data;

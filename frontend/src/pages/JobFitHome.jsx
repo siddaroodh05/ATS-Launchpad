@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { extractTextFromPDF } from "../utils/pdfExtractor";
 import "../styles/JobFitHome.css";
+import { ENDPOINTS } from "../api";
 
 export default function JobFitHome() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function JobFitHome() {
       const extractedText = await extractTextFromPDF(file);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/analysis/analyze-job-fit",
+        ENDPOINTS.ANALYZE_JOB_FIT,
         {
           id: resumeId,
           extracted_text: extractedText,

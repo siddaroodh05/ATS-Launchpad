@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Layout, Mail, Lock, ChevronRight, Rocket, User } from 'lucide-react';
 import '../Styles/Login.css';
+import { ENDPOINTS } from '../api';
 
 const Auth = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -15,14 +16,15 @@ const Auth = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        const baseUrl = "http://localhost:8000";
-        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    
+        // Select the correct live URL based on the mode
+        const targetUrl = isLogin ? ENDPOINTS.LOGIN : ENDPOINTS.REGISTER;
         const payload = isLogin ? { email, password } : { name, email, password };
-
+    
         try {
-            const response = await axios.post(`${baseUrl}${endpoint}`, payload);
-
+            // Now using the URL from our centralized api.js
+            const response = await axios.post(targetUrl, payload);
+    
             if (isLogin) {
                 localStorage.setItem('token', response.data.access_token);
                 localStorage.setItem('userName', response.data.user.name);

@@ -5,6 +5,7 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { extractTextFromPDF } from "../utils/pdfExtractor";
 import "../styles/SkillTestHome.css";
+import { ENDPOINTS } from "../api";
 
 export default function SkillTestHome() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function SkillTestHome() {
       };
 
       const response = await axios.post(
-        "http://localhost:8000/resume/generate-mcqs",
+        ENDPOINTS.GENERATE_MCQS,
         requestData
       );
 

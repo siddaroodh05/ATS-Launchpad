@@ -3,6 +3,7 @@ import  { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Clock, ChevronRight, ChevronLeft, CheckCircle, Loader2 } from "lucide-react";
 import axios from "axios";
+import { ENDPOINTS } from "../api";
 
 export default function QuizPage() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function QuizPage() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/resume/get-stored-mcqs/${resumeId}`);
+        const response = await axios.get(`${ENDPOINTS.GET_STORED_MCQS}/${resumeId}`);
         setQuestionss(response.data);
         setLoading(false);
       } catch (error) {

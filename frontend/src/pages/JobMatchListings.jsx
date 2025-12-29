@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import "../styles/JobMatchListings.css";
+import { ENDPOINTS } from "../api";
 
 export default function JobMatchListings() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function JobMatchListings() {
     const fetchMatches = async () => {
       try {
         const res = await axios.get(
-          `http://127.0.0.1:8000/api/jobs/match/${resumeId}`
+          `${ENDPOINTS.GET_MATCHED_JOBS}/${resumeId}`
         );
         setMatchedJobs(res.data.matches || []);
         setFilename(res.data.filename || "");

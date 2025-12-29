@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { extractTextFromPDF } from "../utils/pdfExtractor";
 import "../styles/JobMatches.css";
+import { ENDPOINTS } from "../api";
 
 export default function JobMatchesHome() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function JobMatchesHome() {
       const resumeId = uuidv4();
       const extractedText = await extractTextFromPDF(file);
 
-      await axios.post("http://127.0.0.1:8000/api/jobs/match", {
+      await axios.post(ENDPOINTS.MATCH_JOBS, {
         id: resumeId,
         extracted_text: extractedText,
         filename: file.name,
