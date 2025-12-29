@@ -14,7 +14,7 @@ app = FastAPI(title="ATSLaunchPod Backend")
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://atslaunchpad1-qo9bmeaxh-siddaroodhs-projects.vercel.app"
+    "https://atslaunchpad1.vercel.app"  
 ]
 
 app.add_middleware(
