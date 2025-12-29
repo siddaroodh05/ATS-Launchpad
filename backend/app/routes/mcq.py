@@ -18,6 +18,7 @@ class MCQRequest(BaseModel):
 
 @router.post("/generate-mcqs")
 async def generate_mcqs(request: MCQRequest, db: Session = Depends(get_db)):
+   
     resume = db.query(models.Resume).filter(models.Resume.id == request.id).first()
     if not resume:
         resume = models.Resume(
@@ -26,36 +27,40 @@ async def generate_mcqs(request: MCQRequest, db: Session = Depends(get_db)):
             extracted_text=request.extracted_text
         )
         db.add(resume)
-        db.flush()
+        db.commit() 
+        db.refresh(resume)
 
+  
     ai_response = generate_mcqs_from_resume(request.extracted_text)
     if "error" in ai_response:
-        raise HTTPException(status_code=503, detail=ai_response["error"])
+        raise HTTPException(status_code=502, detail=ai_response["error"])
 
     mcq_list = ai_response.get("mcqs", [])
-    for item in mcq_list:
-        new_mcq = models.MCQ(
-            id=str(uuid4()),
-            resume_id=request.id,
-            fit_analysis_id=request.job_fit_analysis_id,
-            question_text=item.get("question"),
-            options=item.get("options"),
-            answer=item.get("answer")
-        )
-        db.add(new_mcq)
-
+    
+    
     try:
-        db.commit()
+        for item in mcq_list:
+            new_mcq = models.MCQ(
+                id=str(uuid4()),
+                resume_id=request.id,
+                fit_analysis_id=request.job_fit_analysis_id,
+                question_text=item.get("question"),
+                options=item.get("options"), 
+                answer=item.get("answer")
+            )
+            db.add(new_mcq)
+        
+        db.commit() 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        print(f"DATABASE ERROR: {e}") 
+        raise HTTPException(status_code=500, detail="Failed to save MCQs to database.")
 
     return {
         "resume_id": request.id,
         "count": len(mcq_list),
-        "mcqs": ai_response["mcqs"]
+        "mcqs": mcq_list
     }
-
 @router.get("/get-stored-mcqs/{resume_id}")
 async def get_stored_mcqs(resume_id: str, db: Session = Depends(get_db)):
     questions = db.query(models.MCQ).filter(models.MCQ.resume_id == resume_id).all()
