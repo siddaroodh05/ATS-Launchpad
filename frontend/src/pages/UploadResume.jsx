@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { extractTextFromPDF } from "../utils/pdfExtractor"; 
-import "../styles/Uploadresume.css";
+import "../styles/UploadResume.css";
 import { ENDPOINTS } from "../api";
 
 export default function UploadResume() {
