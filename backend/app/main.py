@@ -2,24 +2,36 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .resume import router as resume_router
-from app.routes import analysis, mcq,auth
+from app.routes import analysis, mcq, auth
 from app.routes.job_match_routes import router as job_router
+
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ATSLaunchPod Backend")
 
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://atslaunchpad1-qo9bmeaxh-siddaroodhs-projects.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 app.include_router(auth.router)
+
 @app.get("/")
 async def root():
     return {"message": "ATSLaunchPod API is running"}
+
 
 app.include_router(resume_router)
 app.include_router(analysis.router)
