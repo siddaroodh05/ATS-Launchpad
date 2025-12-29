@@ -19,36 +19,53 @@ class AnalysisRequest(BaseModel):
 
 @router.post("/analyze-text")
 async def analyze_text_endpoint(request: AnalysisRequest, db: Session = Depends(get_db)):
-    existing_resume = db.query(Resume).filter(Resume.id == request.id).first()
-    if existing_resume:
-        analysis = db.query(ResumeAnalysis).filter(ResumeAnalysis.id == request.id).first()
-        return {"analysis_id": analysis.id, "analysis_result": analysis.analysis_result}
+    try:
+        
+        existing_resume = db.query(Resume).filter(Resume.id == request.id).first()
+        
+        if existing_resume:
+            analysis = db.query(ResumeAnalysis).filter(ResumeAnalysis.id == request.id).first()
+            
+            if analysis:
+                return {
+                    "analysis_id": analysis.id, 
+                    "analysis_result": analysis.analysis_result
+                }
 
-    resume = Resume(
-        id=request.id,
-        filename=request.filename,
-        extracted_text=request.extracted_text
-    )
-    db.add(resume)
-    db.commit()
+       
+        if not existing_resume:
+            resume = Resume(
+                id=request.id,
+                filename=request.filename,
+                extracted_text=request.extracted_text
+            )
+            db.add(resume)
+           
+            db.flush() 
 
-    analysis_json = analyze_resume(
-        resume_text=request.extracted_text,
-        job_description=request.job_description
-    )
+  
+        analysis_json = analyze_resume(
+            resume_text=request.extracted_text,
+            job_description=request.job_description
+        )
 
-    analysis = ResumeAnalysis(
-        id=request.id,
-        resume_id=resume.id,
-        analysis_result=analysis_json
-    )
-    db.add(analysis)
-    db.commit()
 
-    return {
-        "analysis_id": request.id,
-        "analysis_result": analysis_json
-    }
+        new_analysis = ResumeAnalysis(
+            id=request.id,
+            resume_id=request.id,
+            analysis_result=analysis_json
+        )
+        db.add(new_analysis)
+        db.commit()
+
+        return {
+            "analysis_id": request.id,
+            "analysis_result": analysis_json
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @router.get("/analysis/{analysis_id}")
 def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
