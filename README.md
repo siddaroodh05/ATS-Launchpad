@@ -1,6 +1,9 @@
-# ATS Launchpad — Full-Stack Resume Analyzer & Job-Fit Platform
+# ATS Launchpad
 
-This repository contains a full-stack application that analyzes resumes and matches candidates to jobs. The project now includes secure authentication and secrets are no longer stored in the repository. This README explains how to recreate the development environment and secrets locally, and lists both the original project features and the new authentication features.
+### AI-Powered Resume Analyzer & Job-Fit Assessment Platform
+
+ATS Launchpad is a full-stack ATS simulation platform that analyzes resumes, evaluates job-fit, identifies skill gaps, and generates AI-based MCQ skill tests to improve interview readiness.
+
 
 ## Prerequisites
 
