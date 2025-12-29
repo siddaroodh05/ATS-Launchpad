@@ -15,15 +15,32 @@ ATS Launchpad is a full-stack ATS simulation platform that analyzes resumes, eva
 
 These are the original capabilities of ATS Launchpad that the project shipped with:
 
-- Resume upload and parsing (PDF/DOCX)
-- Keyword and skill extraction
-- Candidate scoring and job-fit matching
-- Job posting creation and management
-- Candidate profile pages and CV viewer
-- Search and filter candidates by skills, experience, location
-- Bulk CSV import/export for candidates and jobs
-- Admin dashboard for managing users and reviewing matches
-- Basic analytics and reporting (match rates, top skills)
+- 📄 **Resume Upload & Parsing**  
+  Upload resumes and extract key information such as skills, experience, and keywords using ATS-style parsing.
+
+- 🎯 **Job Description Matching**  
+  Compare resumes with job descriptions to calculate a **Job-Fit Score** based on skill and keyword alignment.
+
+- 📊 **ATS Compatibility Analysis**  
+  Simulates real Applicant Tracking System behavior to evaluate how well a resume matches ATS screening criteria.
+
+- 🧠 **AI-Driven Resume Insights**  
+  Provides strengths, weaknesses, and actionable suggestions to improve resume quality and relevance.
+
+- ❓ **Skill-Based MCQ Generation**  
+  Automatically generates multiple-choice questions from extracted skills to assess technical knowledge and interview readiness.
+
+- 📈 **Job Fit Feedback & Recommendations**  
+  Offers improvement tips and recommendations to enhance job compatibility.
+
+- 🔐 **User Authentication**  
+  Secure login system to manage user-specific resumes and analysis history.
+
+- 🗂️ **Resume & Analysis Management**  
+  Store and manage uploaded resumes, job descriptions, and analysis results.
+
+- 🖥️ **Interactive Frontend Interface**  
+  Clean and responsive UI for uploading resumes, entering job descriptions, viewing scores, and attempting MCQ tests.
 
 ## Backend Setup
 
