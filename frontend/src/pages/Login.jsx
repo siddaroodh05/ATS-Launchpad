@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Layout, Mail, Lock, ChevronRight, Rocket, User } from 'lucide-react';
-import '../Styles/Login.css';
+import '../styles/Login.css';
 import { ENDPOINTS } from '../api';
 
 const Auth = () => {

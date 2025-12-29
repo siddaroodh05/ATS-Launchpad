@@ -12,7 +12,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { extractTextFromPDF } from "../utils/pdfExtractor";
-import "../styles/JobFitHome.css";
+import "../styles/JobfitHome.css";
 import { ENDPOINTS } from "../api";
 
 export default function JobFitHome() {
