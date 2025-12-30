@@ -7,7 +7,7 @@ import {
   Target,
   ArrowLeft
 } from "lucide-react";
-import "../styles/jobFitAnalysis.css";
+import "../styles/JobFitAnalysis.css";
 import { ENDPOINTS } from "../api";
 
 export default function JobFitAnalysis() {
