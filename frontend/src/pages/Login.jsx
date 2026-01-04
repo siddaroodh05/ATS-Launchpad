@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Layout, Mail, Lock, ChevronRight, Rocket, User } from 'lucide-react';
+
+import { Layout, Mail, Lock, ChevronRight, Rocket, User, Loader2 } from 'lucide-react';
 import '../styles/Login.css';
 import { ENDPOINTS } from '../api';
 
@@ -11,18 +12,18 @@ const Auth = () => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false); 
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setIsLoading(true); 
     
-        // Select the correct live URL based on the mode
         const targetUrl = isLogin ? ENDPOINTS.LOGIN : ENDPOINTS.REGISTER;
         const payload = isLogin ? { email, password } : { name, email, password };
     
         try {
-            // Now using the URL from our centralized api.js
             const response = await axios.post(targetUrl, payload);
     
             if (isLogin) {
@@ -36,6 +37,9 @@ const Auth = () => {
             }
         } catch (err) {
             setError(err.response?.data?.detail || 'Authentication failed. Please try again.');
+        } finally {
+            // 3. Stop loading regardless of success or failure
+            setIsLoading(false); 
         }
     };
 
@@ -73,6 +77,7 @@ const Auth = () => {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         required
+                                        disabled={isLoading}
                                     />
                                 </div>
                             )}
@@ -85,6 +90,7 @@ const Auth = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
 
@@ -96,11 +102,25 @@ const Auth = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
 
-                            <button type="submit" className="btn-primary login-btn">
-                                {isLogin ? 'Sign In' : 'Sign Up'} <ChevronRight size={18} />
+                            <button 
+                                type="submit" 
+                                className={`btn-primary login-btn ${isLoading ? 'loading' : ''}`}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="spinner" size={18} />
+                                        Please wait...
+                                    </>
+                                ) : (
+                                    <>
+                                        {isLogin ? 'Sign In' : 'Sign Up'} <ChevronRight size={18} />
+                                    </>
+                                )}
                             </button>
                         </form>
 
@@ -110,6 +130,7 @@ const Auth = () => {
                                 <button
                                     className="toggle-btn-link"
                                     type="button"
+                                    disabled={isLoading}
                                     onClick={() => {
                                         setIsLogin(!isLogin);
                                         setError('');
@@ -119,8 +140,8 @@ const Auth = () => {
                                         border: 'none',
                                         padding: 0,
                                         font: 'inherit',
-                                        cursor: 'pointer',
-                                        color: '#818cf8',
+                                        cursor: isLoading ? 'default' : 'pointer',
+                                        color: isLoading ? '#94a3b8' : '#818cf8',
                                         fontWeight: '600',
                                         marginLeft: '5px'
                                     }}
