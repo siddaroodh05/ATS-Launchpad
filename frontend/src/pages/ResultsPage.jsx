@@ -46,7 +46,7 @@ export default function ResultsPage() {
             </div>
             <h1>Test Completed!</h1>
             <p className="feedback-text">
-              {results.percentage >= 70
+                {results.percentage >= 80
                 ? "Excellent work! You've mastered this topic."
                 : "Good effort! A bit more practice will make you perfect."}
             </p>
@@ -111,6 +111,13 @@ export default function ResultsPage() {
                       );
                     })}
                   </div>
+
+                  {q.explanation && (
+                    <div className="answer-explanation">
+                      <strong>Explanation</strong>
+                      <p>{q.explanation}</p>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -5,8 +5,31 @@ __pycache__/
 venv/
 myenv/
 .env
+.env.*
+!.env.example
+*.secret
+*.secrets
+*.credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Separate backend repository
+/ATS/
+
+# Local editor and backup files
+.idea/
+.vscode/
+.gitignore-backup
 
 # Node
 node_modules/
 dist/
 .DS_Store
+
+# Logs and local runtime output
+*.log
+coverage/

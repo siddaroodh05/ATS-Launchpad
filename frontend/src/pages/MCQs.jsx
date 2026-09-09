@@ -1,38 +1,34 @@
 import "../styles/Mcq.css";
-import  { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Clock, ChevronRight, ChevronLeft, CheckCircle, Loader2 } from "lucide-react";
-import axios from "axios";
-import { ENDPOINTS } from "../api";
 
 export default function QuizPage() {
   const navigate = useNavigate();
-  const { resumeId } = useParams();
-  
-  const [questionss, setQuestionss] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { state } = useLocation();
+  const questions = state?.questions || [];
+  const unavailable = state?.unavailable || false;
+  const error = state?.error;
+  const answerByQuestion = Object.fromEntries(
+    (state?.answers || []).map((answer) => [answer.questionNumber, answer])
+  );
+
+  const [questionss] = useState(questions);
+  const [loading] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(900);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get(`${ENDPOINTS.GET_STORED_MCQS}/${resumeId}`);
-        setQuestionss(response.data);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-      }
-    };
-    if (resumeId) fetchQuestions();
-  }, [resumeId]);
-
-  useEffect(() => {
-    if (timeLeft === 0) handleSubmit();
-    const timer = setInterval(() => setTimeLeft(prev => (prev > 0 ? prev - 1 : 0)), 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+  if (error) {
+    return (
+      <div className="loading-container">
+        <p>{error}</p>
+        <button className="submit-btn" onClick={() => navigate("/skill-test")}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -41,23 +37,26 @@ export default function QuizPage() {
   };
 
   const handleOptionSelect = (option) => {
-    const questionUuid = questionss[currentQuestion].id;
-    setSelectedAnswers({ ...selectedAnswers, [questionUuid]: option });
+    const questionNumber = questionss[currentQuestion].questionNumber;
+    setSelectedAnswers({ ...selectedAnswers, [questionNumber]: option });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     let score = 0;
 
     const formattedQuestions = questionss.map((q) => {
-      const userAnswer = selectedAnswers[q.id] || "Skipped";
-      const isCorrect = userAnswer === q.answer;
-      if (isCorrect) score += 2;
+      const answer = answerByQuestion[q.questionNumber];
+      const userAnswer = selectedAnswers[q.questionNumber] || "Skipped";
+      const correctAnswer = answer?.correctAnswer || "Unavailable";
+      const isCorrect = userAnswer === correctAnswer;
+      if (isCorrect) score += 1;
 
       return {
-        questionText: q.question_text,
+        questionText: q.question,
         options: q.options,
         userAnswer,
-        correctAnswer: q.answer
+        correctAnswer,
+        explanation: answer?.explanation || ""
       };
     });
 
@@ -66,7 +65,14 @@ export default function QuizPage() {
     const secondsTaken = timeSpentSeconds % 60;
     const timeFormatted = `${minutesTaken}:${secondsTaken < 10 ? "0" : ""}${secondsTaken}`;
 
-    let status = score < 5 ? "Fail" : score >= 8 ? "Excellent" : "Pass";
+    const percentage = questionss.length
+      ? (score / questionss.length) * 100
+      : 0;
+    const status = percentage < 50
+      ? "Fail"
+      : percentage >= 80
+        ? "Excellent"
+        : "Pass";
 
     navigate("/skill-test/results", { 
       state: { 
@@ -74,19 +80,40 @@ export default function QuizPage() {
           score,
           total: questionss.length,
           status,
-          percentage: (score / questionss.length) * 100,
+          percentage,
           timeTaken: timeFormatted,
           questionss: formattedQuestions
         } 
       } 
     });
-  };
+  }, [answerByQuestion, navigate, questionss, selectedAnswers, timeLeft]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      handleSubmit();
+      return undefined;
+    }
+
+    const timer = setInterval(() => setTimeLeft(prev => (prev > 0 ? prev - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, [handleSubmit, timeLeft]);
 
   if (loading) {
     return (
       <div className="loading-container">
         <Loader2 className="animate-spin" size={48} />
         <p>Loading questions...</p>
+      </div>
+    );
+  }
+
+  if (unavailable || !questionss.length || !Object.keys(answerByQuestion).length) {
+    return (
+      <div className="loading-container">
+        <p>Unable to take the skill test right now. Please try again later.</p>
+        <button className="submit-btn" onClick={() => navigate("/skill-test")}>
+          Back to Skill Test
+        </button>
       </div>
     );
   }
@@ -115,12 +142,12 @@ export default function QuizPage() {
         </header>
 
         <main className="question-card">
-          <h2 className="question-text">{currentData.question_text}</h2>
+          <h2 className="question-text">{currentData.question}</h2>
           <div className="options-grid">
             {currentData.options.map((option, index) => (
               <button
                 key={index}
-                className={`option-btn ${selectedAnswers[currentData.id] === option ? "selected" : ""}`}
+                className={`option-btn ${selectedAnswers[currentData.questionNumber] === option ? "selected" : ""}`}
                 onClick={() => handleOptionSelect(option)}
               >
                 <span className="option-label">{String.fromCharCode(65 + index)}</span>

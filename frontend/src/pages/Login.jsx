@@ -20,22 +20,21 @@ const Auth = () => {
     setIsLoading(true); 
     
         const targetUrl = isLogin ? ENDPOINTS.LOGIN : ENDPOINTS.REGISTER;
-        const payload = isLogin ? { email, password } : { name, email, password };
+        const payload = isLogin ? { Email: email, password } : { username: name, email, password };
     
         try {
-            const response = await axios.post(targetUrl, payload);
+            const response = await axios.post(targetUrl, payload, { withCredentials: true });
     
             if (isLogin) {
-                localStorage.setItem('token', response.data.access_token);
-                localStorage.setItem('userName', response.data.user.name);
-                localStorage.setItem('userEmail', response.data.user.email);
+                localStorage.setItem('userName', response.data.name);
+                localStorage.setItem('userEmail', response.data.email);
                 navigate('/');
             } else {
                 setIsLogin(true);
                 alert("Account created successfully! Please sign in.");
             }
         } catch (err) {
-            setError(err.response?.data?.detail || 'Authentication failed. Please try again.');
+            setError(err.response?.data?.message || err.response?.data?.detail || 'Authentication failed. Please try again.');
         } finally {
             // 3. Stop loading regardless of success or failure
             setIsLoading(false); 

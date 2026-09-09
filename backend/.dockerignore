@@ -1,8 +1,0 @@
-.env
-myenv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.git/
-.gitignore
-Dockerfile

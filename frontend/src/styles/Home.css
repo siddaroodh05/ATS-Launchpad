@@ -54,6 +54,31 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: 28px;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-name,
+.profile-email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-name {
+  color: #f8fafc;
+  font-size: 0.85rem;
+}
+
+.profile-email {
+  color: #94a3b8;
+  font-size: 0.72rem;
 }
 
 .profile-circle {

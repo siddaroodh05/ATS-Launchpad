@@ -1,86 +1,93 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Analysis.css";
-import { Target, Briefcase, HelpCircle, Eye } from "lucide-react";
-import { ENDPOINTS } from "../api";
+import { Target, HelpCircle } from "lucide-react";
+
+const EMPTY_ANALYSIS = {
+  ats_compatibility_score: 0,
+  professional_summary: "",
+  strengths: [],
+  weaknesses: [],
+  improvement_suggestions: []
+};
 
 function Analysis() {
-  const { id } = useParams();
   const navigate = useNavigate();
-
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { state } = useLocation();
+  const [analysis, setAnalysis] = useState(() => {
+    const initialAnalysis = state?.analysis ?? window.resumeAnalysisState ?? EMPTY_ANALYSIS;
+    return { ...EMPTY_ANALYSIS, ...initialAnalysis };
+  });
 
   useEffect(() => {
-    const fetchAnalysisData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${ENDPOINTS.GET_ANALYSIS}/${id}`
-        );
-        setData(response.data.analysis_result);
-      } catch (err) {
-        console.error("Fetch Error:", err);
-        setError(
-          "We couldn't find the analysis for this ID. It might still be processing or doesn't exist."
-        );
-      } finally {
-        setTimeout(() => setLoading(false), 500);
-      }
+    const handleUpdate = (event) => {
+      setAnalysis((previous) => ({
+        ...EMPTY_ANALYSIS,
+        ...previous,
+        ...event.detail
+      }));
     };
 
-    if (id) fetchAnalysisData();
-  }, [id]);
-
-  const handlePreview = async () => {
-    const previewWindow = window.open("", "_blank");
-    if (previewWindow) {
-      previewWindow.document.write(
-        "<p style='font-family:sans-serif; text-align:center; margin-top:50px;'>Generating your professional report...</p>"
-      );
+    if (state?.analysis) {
+      setAnalysis({ ...EMPTY_ANALYSIS, ...state.analysis });
     }
 
-    try {
-      const response = await axios.get(
-        `${ENDPOINTS.DOWNLOAD_PDF}/${id}/download-pdf`,
-        { responseType: "blob" }
-      );
+    window.addEventListener("resume-analysis-update", handleUpdate);
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
+    return () => {
+      window.removeEventListener("resume-analysis-update", handleUpdate);
+    };
+  }, [state?.analysis]);
 
-      if (previewWindow) {
-        previewWindow.location.href = url;
-      }
+  const data = analysis ?? EMPTY_ANALYSIS;
+  const isStreaming = data.isStreaming ?? state?.isStreaming ?? false;
+  const hasScore = Number(data.ats_compatibility_score ?? 0) > 0;
+  const hasSummary = Boolean((data.professional_summary ?? "").trim());
+  const hasStrengths = Array.isArray(data.strengths) && data.strengths.length > 0;
+  const hasWeaknesses = Array.isArray(data.weaknesses) && data.weaknesses.length > 0;
+  const hasRecommendations = Array.isArray(data.improvement_suggestions) && data.improvement_suggestions.length > 0;
+  const hasAnyData = hasScore || hasSummary || hasStrengths || hasWeaknesses || hasRecommendations;
 
-      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-    } catch (err) {
-      console.error("Preview Error:", err);
-      if (previewWindow) previewWindow.close();
-      alert("Could not generate preview. Please try again.");
-    }
-  };
-
-  if (loading) {
+  if (data.error) {
     return (
-      <div className="analysis-loading">
-        <div className="loading-spinner" />
-        <p>Fetching your results...</p>
+      <div className="error-view">
+        <h2>Resume analysis failed</h2>
+        <p>{data.error}</p>
+        <button
+          className="bottom-btn primary-btn"
+          onClick={() => navigate("/upload")}
+        >
+          Try Again
+        </button>
       </div>
     );
   }
 
-  if (error || !data) {
+  if (!state?.analysis && !window.resumeAnalysisState) {
     return (
       <div className="error-view">
         <h2>Oops!</h2>
-        <p>{error}</p>
+        <p>There is no resume analysis to display.</p>
         <button
           className="bottom-btn primary-btn"
           onClick={() => navigate("/upload")}
         >
           Go Back to Upload
+        </button>
+      </div>
+    );
+  }
+
+  if (!isStreaming && !hasAnyData) {
+    return (
+      <div className="error-view">
+        <h2>Analysis not available</h2>
+        <p>The analysis stream did not return any results. Please try again later.</p>
+        <button
+          className="bottom-btn primary-btn"
+          onClick={() => navigate("/upload")}
+        >
+          Try Again
         </button>
       </div>
     );
@@ -108,65 +115,69 @@ function Analysis() {
           <div>
             <h1>Analysis Overview</h1>
             <p className="resume-subtitle">
-              Candidate: {data.candidate_name} · {data.job_title}
+              {isStreaming ? "Live resume analysis in progress..." : "Resume ATS compatibility review"}
             </p>
           </div>
 
-          <div className="header-stats">
-            <div className="stat-item">
-              <span className="stat-number">
-                {data.ats_compatibility_score}
-              </span>
-              <span className="stat-label">ATS Score</span>
+          {hasScore && (
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-number">
+                  {data.ats_compatibility_score}
+                </span>
+                <span className="stat-label">ATS Score</span>
+              </div>
             </div>
-          </div>
+          )}
         </header>
 
-        <section className="resume-preview">
-          <div className="resume-left">
-            <h2 className="resume-name">{data.candidate_name}</h2>
-            <p className="resume-role">{data.job_title}</p>
-            <p className="resume-contact">
-              {data.contact_info.email} | {data.contact_info.location}
-            </p>
-          </div>
-
-          <div className="resume-right">
-            <p className="resume-summary">{data.professional_summary}</p>
-          </div>
-        </section>
+        {hasSummary && (
+          <section className="resume-preview">
+            <div className="resume-right">
+              <p className="resume-summary">{data.professional_summary}</p>
+            </div>
+          </section>
+        )}
 
         <main className="analysis-main">
-          <section className="analysis-grid two-cols">
-            <article className="analysis-card">
-              <h3>Strengths</h3>
-              <ul className="recommendations-list">
-                {data.strengths.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </article>
+          {(hasStrengths || hasWeaknesses) && (
+            <section className="analysis-grid two-cols">
+              {hasStrengths && (
+                <article className="analysis-card">
+                  <h3>Strengths</h3>
+                  <ul className="recommendations-list">
+                    {data.strengths.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              )}
 
-            <article className="analysis-card">
-              <h3>Weaknesses</h3>
-              <ul className="recommendations-list">
-                {data.weaknesses.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </section>
+              {hasWeaknesses && (
+                <article className="analysis-card">
+                  <h3>Weaknesses</h3>
+                  <ul className="recommendations-list">
+                    {data.weaknesses.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+            </section>
+          )}
 
-          <section className="analysis-grid one-col">
-            <article className="analysis-card">
-              <h3>Recommended Improvements</h3>
-              <ul className="recommendations-list">
-                {data.improvement_suggestions.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </section>
+          {hasRecommendations && (
+            <section className="analysis-grid one-col">
+              <article className="analysis-card">
+                <h3>Recommended Improvements</h3>
+                <ul className="recommendations-list">
+                  {data.improvement_suggestions.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </section>
+          )}
 
           <section className="bottom-buttons">
             <button
@@ -177,19 +188,9 @@ function Analysis() {
               <span>Check Job Fit</span>
             </button>
 
-            <button className="bottom-btn outline-btn" onClick={()=>navigate("/job-matches")}>
-              <Briefcase size={18} />
-              <span>View Matches</span>
-            </button>
-
             <button className="bottom-btn outline-btn" onClick={()=>navigate("/skill-test")}>
               <HelpCircle size={18} />
               <span>Skill Test</span>
-            </button>
-
-            <button className="bottom-btn outline-btn" onClick={handlePreview}>
-              <Eye size={18} />
-              <span>Download</span>
             </button>
           </section>
         </main>

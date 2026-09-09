@@ -9,11 +9,8 @@ import {
   Loader2,
   ArrowLeft
 } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
-import { extractTextFromPDF } from "../utils/pdfExtractor";
 import "../styles/JobfitHome.css";
-import { ENDPOINTS } from "../api";
+import { ENDPOINTS, streamMultipart } from "../api";
 
 export default function JobFitHome() {
   const navigate = useNavigate();
@@ -31,27 +28,63 @@ export default function JobFitHome() {
 
     try {
       setIsAnalyzing(true);
+      const analysis = {
+        score: 0,
+        summary: "",
+        matchedSkills: [],
+        missingSkills: [],
+        skillGaps: [],
+        improvements: []
+      };
 
-      const resumeId = uuidv4();
-      const extractedText = await extractTextFromPDF(file);
+      const syncAnalysis = (updatedAnalysis) => {
+        window.jobFitAnalysisState = updatedAnalysis;
+        window.dispatchEvent(
+          new CustomEvent("job-fit-analysis-update", { detail: updatedAnalysis })
+        );
+      };
 
-      const response = await axios.post(
+      syncAnalysis(analysis);
+      navigate("/job-fit/analysis", { state: { analysis, isStreaming: true } });
+
+      await streamMultipart(
         ENDPOINTS.ANALYZE_JOB_FIT,
         {
-          id: resumeId,
-          extracted_text: extractedText,
-          filename: file.name,
-          job_description_text: jobDescription
+          file,
+          jobDescription: new Blob(
+            [JSON.stringify({ description: jobDescription })],
+            { type: "application/json" }
+          )
+        },
+        (event, data) => {
+          if (event === "match_score") analysis.score = Number(data.score ?? 0);
+          if (event === "summary") analysis.summary = data.text || "";
+          if (event === "matched_skills") analysis.matchedSkills = data.items || [];
+          if (event === "missing_skills") analysis.missingSkills = data.items || [];
+          if (event === "skill_gaps") analysis.skillGaps = data.items || [];
+          if (event === "recommendations") analysis.improvements = data.items || [];
+
+          syncAnalysis({ ...analysis });
+        },
+        {
+          requiredEvents: ["match_score", "summary", "matched_skills", "missing_skills", "skill_gaps", "recommendations", "complete"]
         }
       );
 
-      navigate(`/job-fit/analysis/${response.data.fit_analysis_id}`);
+      syncAnalysis({ ...analysis, isStreaming: false });
     } catch (error) {
       console.error("Analysis failed:", error);
-      alert(
-        error.response?.data?.detail ||
-          "Failed to analyze job fit. Please try again."
+      const message = error.message || "An error occurred during job-fit analysis.";
+      const failedAnalysis = {
+        ...(window.jobFitAnalysisState || {}),
+        isStreaming: false,
+        error: message
+      };
+      window.jobFitAnalysisState = failedAnalysis;
+      window.dispatchEvent(
+        new CustomEvent("job-fit-analysis-update", { detail: failedAnalysis })
       );
+      navigate("/job-fit/analysis", { state: { analysis: failedAnalysis, isStreaming: false } });
     } finally {
       setIsAnalyzing(false);
     }

@@ -73,6 +73,10 @@
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
 }
+.status-badge.excellent {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
 
 /* Stats Grid */
 .stats-grid {
@@ -182,6 +186,25 @@
   gap: 16px;
   margin-top: 30px;
   justify-content: center;
+}
+
+.answer-explanation {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-left: 3px solid #60a5fa;
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
+}
+
+.answer-explanation strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #93c5fd;
+}
+
+.answer-explanation p {
+  margin: 0;
+  line-height: 1.6;
 }
 
 .btn-primary,

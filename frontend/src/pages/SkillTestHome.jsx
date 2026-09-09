@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, BookOpen, Clock, Target, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
-import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
-import { extractTextFromPDF } from "../utils/pdfExtractor";
 import "../styles/SkillTestHome.css";
-import { ENDPOINTS } from "../api";
+import { ENDPOINTS, streamMultipart } from "../api";
 
 export default function SkillTestHome() {
   const navigate = useNavigate();
@@ -25,29 +22,38 @@ export default function SkillTestHome() {
     setIsUploading(true);
 
     try {
-      const resumeId = uuidv4();
-      const extractedText = await extractTextFromPDF(file);
+      const questions = [];
+      let answers = [];
+      let receivedAnswersEvent = false;
 
-      const requestData = {
-        id: resumeId,
-        filename: file.name,
-        extracted_text: extractedText,
-        job_description_text: ""
-      };
+      await streamMultipart(ENDPOINTS.GENERATE_MCQS, { file }, (event, data) => {
+        if (event === "question") questions.push(data);
+        if (event === "answers") {
+          receivedAnswersEvent = true;
+          answers = data.items || [];
+        }
+      }, {
+        requiredEvents: ["question", "answers", "complete"]
+      });
 
-      const response = await axios.post(
-        ENDPOINTS.GENERATE_MCQS,
-        requestData
-      );
-
-      if (response.status === 200) {
-        navigate(`/mcqs/${resumeId}`, { 
-          state: { questions: response.data.mcqs } 
-        });
+      if (questions.length !== 10 || answers.length !== 10) {
+        throw new Error("Incomplete skill test response.");
       }
+
+      navigate("/mcqs", {
+        state: {
+          questions,
+          answers,
+          unavailable: !receivedAnswersEvent || !answers.length
+        }
+      });
     } catch (error) {
       console.error("Error generating MCQs:", error);
-      alert("Failed to generate test. Please check if the backend is running.");
+      navigate("/mcqs", {
+        state: {
+          error: error.message || "An error occurred while generating the skill test."
+        }
+      });
     } finally {
       setIsUploading(false);
     }

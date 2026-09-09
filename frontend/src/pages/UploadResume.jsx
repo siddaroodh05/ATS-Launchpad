@@ -2,11 +2,8 @@ import { useState } from "react";
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
-import { extractTextFromPDF } from "../utils/pdfExtractor"; 
 import "../styles/UploadResume.css";
-import { ENDPOINTS } from "../api";
+import { ENDPOINTS, streamMultipart } from "../api";
 
 export default function UploadResume() {
   const [file, setFile] = useState(null);
@@ -22,24 +19,50 @@ export default function UploadResume() {
 
     try {
       setIsAnalyzing(true);
-      const customId = uuidv4();
+      const analysis = {
+        ats_compatibility_score: 0,
+        professional_summary: "",
+        strengths: [],
+        weaknesses: [],
+        improvement_suggestions: []
+      };
 
-      // Extract text from uploaded PDF
-      const text = await extractTextFromPDF(file);
+      const syncAnalysis = (updatedAnalysis) => {
+        window.resumeAnalysisState = updatedAnalysis;
+        window.dispatchEvent(
+          new CustomEvent("resume-analysis-update", { detail: updatedAnalysis })
+        );
+      };
 
-      // Send data to backend
-      await axios.post(ENDPOINTS.ANALYZE_TEXT, {
-        id: customId,
-        extracted_text: text,
-        filename: file.name,
-        job_description: "" 
+      syncAnalysis(analysis);
+      navigate("/analysis", { state: { analysis, isStreaming: true } });
+
+      await streamMultipart(ENDPOINTS.ANALYZE_RESUME, { file }, (event, data) => {
+        if (event === "ats_score") analysis.ats_compatibility_score = Number(data.score ?? 0);
+        if (event === "summary") analysis.professional_summary = data.text || "";
+        if (event === "strengths") analysis.strengths = data.items || [];
+        if (event === "weaknesses") analysis.weaknesses = data.items || [];
+        if (event === "recommendations") analysis.improvement_suggestions = data.items || [];
+
+        syncAnalysis({ ...analysis });
+      }, {
+        requiredEvents: ["ats_score", "summary", "strengths", "weaknesses", "recommendations", "complete"]
       });
 
-      // Navigate to analysis page
-      navigate(`/analysis/${customId}`);
+      syncAnalysis({ ...analysis, isStreaming: false });
     } catch (error) {
       console.error("Analysis failed:", error);
-      alert(error.message || "An error occurred during resume analysis.");
+      const message = error.message || "An error occurred during resume analysis.";
+      const failedAnalysis = {
+        ...(window.resumeAnalysisState || {}),
+        isStreaming: false,
+        error: message
+      };
+      window.resumeAnalysisState = failedAnalysis;
+      window.dispatchEvent(
+        new CustomEvent("resume-analysis-update", { detail: failedAnalysis })
+      );
+      navigate("/analysis", { state: { analysis: failedAnalysis, isStreaming: false } });
     } finally {
       setIsAnalyzing(false);
     }
@@ -60,7 +83,7 @@ export default function UploadResume() {
         <label className={`upload-box ${file ? "has-file" : ""}`}>
           <input 
             type="file" 
-            accept="application/pdf" 
+              accept=".pdf,.doc,.docx" 
             onChange={handleFileChange} 
             hidden 
           />

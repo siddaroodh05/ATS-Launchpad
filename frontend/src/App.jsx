@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import UploadResume from "./pages/UploadResume";
 import Analysis from "./pages/Analysis";
@@ -7,8 +7,6 @@ import SkillTestHome from "./pages/SkillTestHome";
 import QuizPage from "./pages/MCQs";
 import ResultsPage from "./pages/ResultsPage";
 import JobFitAnalysis from "./pages/JobFitAnalysis";
-import JobMatchesHome from "./pages/JobMatchesHome";
-import JobMatchListings from "./pages/JobMatchListings";
 import Auth from "./pages/Login";
 import "./App.css";
 
@@ -18,18 +16,16 @@ function App() {
       <div className="app-container">
         <div className="app-content">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/upload" element={<UploadResume />} />
-            <Route path="/skill-test" element={<SkillTestHome />} />
-            <Route path="/analysis" element={<Analysis />} />
-            <Route path="/analysis/:id" element={<Analysis />} />
-            <Route path="/mcqs/:resumeId" element={<QuizPage />} />
-            <Route path="/skill-test/results" element={<ResultsPage />} />
-            <Route path="/job-fit" element={<JobFitHome />} />
-            <Route path="/job-fit/analysis/:id" element={<JobFitAnalysis />} />
-            <Route path="/job-matches" element={<JobMatchesHome />} />
-            <Route path="/job-matches/listings/:resumeId" element={<JobMatchListings />} />
             <Route path="/login" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/upload" element={<ProtectedRoute><UploadResume /></ProtectedRoute>} />
+            <Route path="/skill-test" element={<ProtectedRoute><SkillTestHome /></ProtectedRoute>} />
+            <Route path="/analysis" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
+            <Route path="/analysis/:id" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
+            <Route path="/mcqs" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+            <Route path="/skill-test/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+            <Route path="/job-fit" element={<ProtectedRoute><JobFitHome /></ProtectedRoute>} />
+            <Route path="/job-fit/analysis" element={<ProtectedRoute><JobFitAnalysis /></ProtectedRoute>} />
           </Routes>
         </div>
 
@@ -39,6 +35,12 @@ function App() {
       </div>
     </BrowserRouter>
   );
+}
+
+function ProtectedRoute({ children }) {
+  const isLoggedIn = Boolean(localStorage.getItem("userEmail"));
+
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
 }
 
 export default App;

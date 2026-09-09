@@ -1,48 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-    FileText, Brain, Target, HelpCircle, Briefcase, Sparkles, User, LogOut, Mail 
-} from "lucide-react";
+import React from 'react';
+import { FileText, Brain, Target, HelpCircle, Sparkles, LogOut } from "lucide-react";
+import axios from "axios";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "../styles/Home.css";
+import { ENDPOINTS } from "../api";
 
 export default function Home() {
     const navigate = useNavigate();
-    const dropdownRef = useRef(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const [userData, setUserData] = useState({ name: "User", email: "" });
+    const userName = localStorage.getItem("userName") || "User";
+    const userEmail = localStorage.getItem("userEmail") || "";
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        setIsLoggedIn(!!token);
-
-        if (token) {
-            setUserData({
-                name: localStorage.getItem('userName') || "User",
-                email: localStorage.getItem('userEmail') || ""
-            });
+    const handleLogout = async () => {
+        try {
+            await axios.post(ENDPOINTS.LOGOUT, {}, { withCredentials: true });
+        } finally {
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userEmail");
+            navigate("/login", { replace: true });
         }
-
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowDropdown(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleLogout = () => {
-        localStorage.clear();
-        setIsLoggedIn(false);
-        setShowDropdown(false);
-        navigate('/');
-    };
-
-    const protectedNavigate = (path) => {
-        isLoggedIn ? navigate(path) : navigate("/login");
     };
 
     return (
@@ -57,42 +33,21 @@ export default function Home() {
 
                 <div className="nav-actions">
                     <div className="nav-links">
-                        <span className="nav-link" onClick={() => protectedNavigate("/skill-test")}>Skill Test</span>
-                        <span className="nav-link" onClick={() => protectedNavigate("/job-fit")}>Job-Fit</span>
-                        <span className="nav-link" onClick={() => protectedNavigate("/job-matches")}>Job-Match</span>
+                        <span className="nav-link" onClick={() => navigate("/skill-test")}>Skill Test</span>
+                        <span className="nav-link" onClick={() => navigate("/job-fit")}>Job-Fit</span>
                     </div>
-
-                    {isLoggedIn ? (
-                        <div className="user-profile-wrapper" ref={dropdownRef}>
-                            <div className="profile-circle" onClick={() => setShowDropdown(!showDropdown)}>
-                                <User size={18} />
-                            </div>
-
-                            <AnimatePresence>
-                                {showDropdown && (
-                                    <motion.div 
-                                        className="profile-dropdown"
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                    >
-                                        <div className="dropdown-header">
-                                            <p className="user-name-text">{userData.name}</p>
-                                            <p className="user-email-text">
-                                                <Mail size={12} /> {userData.email}
-                                            </p>
-                                        </div>
-                                        <div className="dropdown-divider" />
-                                        <button className="logout-button" onClick={handleLogout}>
-                                            <LogOut size={16} /> Sign Out
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                    <div className="user-profile-nav">
+                        <div className="profile-circle" aria-hidden="true">
+                            {userName.charAt(0).toUpperCase()}
                         </div>
-                    ) : (
-                        <button className="btn-outline" onClick={() => navigate("/login")}>Login</button>
-                    )}
+                        <div className="profile-details">
+                            <strong className="profile-name">{userName}</strong>
+                            <span className="profile-email">{userEmail}</span>
+                        </div>
+                        <button className="btn-logout" type="button" onClick={handleLogout} aria-label="Sign out">
+                            <LogOut size={16} />
+                        </button>
+                    </div>
                 </div>
             </nav>
 
@@ -106,7 +61,7 @@ export default function Home() {
                         live job openings in seconds.
                     </p>
                     <div className="hero-buttons">
-                        <button className="btn-primary" onClick={() => protectedNavigate("/upload")}>Get Started</button>
+                        <button className="btn-primary" onClick={() => navigate("/upload")}>Get Started</button>
                     </div>
                 </motion.div>
 
@@ -124,13 +79,12 @@ export default function Home() {
                     <Feature icon={<Target />} title="Job Fit Score" desc="Match resume with job description" />
                     <Feature icon={<Brain />} title="Smart Suggestions" desc="Improve skills & keywords" />
                     <Feature icon={<HelpCircle />} title="Generate MCQs" desc="Test your skills" />
-                    <Feature icon={<Briefcase />} title="Job Match" desc="Find live job openings tailored to your resume" />
                 </div>
             </section>
 
             <section className="cta">
                 <h4>Ready to Land Your Dream Job?</h4>
-                <button className="btn-primary" onClick={() => protectedNavigate("/upload")}>Get Started</button>
+                <button className="btn-primary" onClick={() => navigate("/upload")}>Get Started</button>
             </section>
         </div>
     );
