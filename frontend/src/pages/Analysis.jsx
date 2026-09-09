@@ -28,10 +28,6 @@ function Analysis() {
       }));
     };
 
-    if (state?.analysis) {
-      setAnalysis({ ...EMPTY_ANALYSIS, ...state.analysis });
-    }
-
     window.addEventListener("resume-analysis-update", handleUpdate);
 
     return () => {

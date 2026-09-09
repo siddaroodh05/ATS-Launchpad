@@ -9,6 +9,9 @@
         <module name="ATS" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ATS-backend" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

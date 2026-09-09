@@ -12,17 +12,6 @@ export const ENDPOINTS = {
 };
 
 const getErrorMessage = (payload, fallback) => {
-
-    const handleAuthenticationFailure = (status) => {
-        if (status !== 401 && status !== 403) return;
-
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userEmail");
-
-        if (window.location.pathname !== "/login") {
-            window.location.replace("/login");
-        }
-    };
     if (!payload) return fallback;
 
     try {
@@ -34,10 +23,46 @@ const getErrorMessage = (payload, fallback) => {
     }
 };
 
+const handleAuthenticationFailure = (status) => {
+    if (status !== 401 && status !== 403) return;
+
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+
+    if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
+    }
+};
+
+export async function apiRequest(endpoint, { method = "GET", body, signal } = {}) {
+    const response = await fetch(endpoint, {
+        method,
+        credentials: "include",
+        headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal
+    });
+
+    if (!response.ok) {
+        handleAuthenticationFailure(response.status);
+        const message = await response.text();
+        throw new Error(getErrorMessage(message, `Request failed with status ${response.status}`));
+    }
+
+    const responseText = await response.text();
+    return responseText ? JSON.parse(responseText) : null;
+}
+
 export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
-    const { requiredEvents = [] } = options;
+    const {
+        requiredEvents = [],
+        timeoutMs = 30000,
+        errorFallback = "The request failed."
+    } = options;
     const formData = new FormData();
     const receivedEvents = new Set();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     Object.entries(fields).forEach(([name, value]) => {
         formData.append(name, value);
@@ -46,7 +71,8 @@ export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
     const response = await fetch(endpoint, {
         method: "POST",
         credentials: "include",
-        body: formData
+        body: formData,
+        signal: controller.signal
     });
 
     if (!response.ok) {
@@ -56,7 +82,7 @@ export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
     }
 
     if (!response.body) {
-        throw new Error("The server did not return a streaming response.");
+        throw new Error(errorFallback);
     }
 
     const reader = response.body.getReader();
@@ -82,27 +108,28 @@ export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
         const dataText = dataLines.join("\n");
         let data;
 
-    while (true) {
-        const { value, done } = await reader.read();
-        buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+        try {
+            data = JSON.parse(dataText);
+        } catch {
+            throw new Error(getErrorMessage(dataText, "The server returned invalid analysis data."));
         }
-        const events = buffer.split(/\r?\n\r?\n/);
-        buffer = events.pop() || "";
-            throw new Error(getErrorMessage(data, "Resume analysis failed."));
-        events.filter(Boolean).forEach(processEvent);
 
-        if (done) {
-            if (buffer.trim()) {
-                processEvent(buffer);
+        if (data?.error) {
+            throw new Error(getErrorMessage(data, errorFallback));
         }
-            break;
 
-    }
         receivedEvents.add(eventName);
-    const missingEvents = requiredEvents.filter((eventName) => !receivedEvents.has(eventName));
-    if (missingEvents.length > 0) {
-        throw new Error(`Incomplete analysis response. Missing events: ${missingEvents.join(", ")}`);
+        onEvent(eventName, data);
+    };
+
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+
             const events = buffer.split(/\r?\n\r?\n/);
+            buffer = events.pop() || "";
+            events.filter(Boolean).forEach(processEvent);
 
             if (done) {
                 if (buffer.trim()) {
@@ -118,7 +145,7 @@ export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
         }
     } catch (error) {
         if (error.name === "AbortError") {
-            throw new Error("The analysis timed out after 30 seconds without a response.");
+            throw new Error(`The request timed out after ${timeoutMs / 1000} seconds.`);
         }
         throw error;
     } finally {

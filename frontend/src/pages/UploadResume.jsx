@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "../styles/UploadResume.css";
 import { ENDPOINTS, streamMultipart } from "../api";
@@ -46,7 +45,8 @@ export default function UploadResume() {
 
         syncAnalysis({ ...analysis });
       }, {
-        requiredEvents: ["ats_score", "summary", "strengths", "weaknesses", "recommendations", "complete"]
+        requiredEvents: ["ats_score", "summary", "strengths", "weaknesses", "recommendations", "complete"],
+        errorFallback: "Resume analysis failed."
       });
 
       syncAnalysis({ ...analysis, isStreaming: false });
@@ -70,10 +70,8 @@ export default function UploadResume() {
 
   return (
     <div className="upload-page">
-      <motion.div
+      <div
         className="upload-card"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
       >
         <div className="upload-icon">
           <UploadCloud size={42} />
@@ -114,7 +112,7 @@ export default function UploadResume() {
             "Analyze Resume"
           )}
         </button>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Layout, Mail, Lock, ChevronRight, Rocket, User, Loader2 } from 'lucide-react';
 import '../styles/Login.css';
-import { ENDPOINTS } from '../api';
+import { apiRequest, ENDPOINTS } from '../api';
 
 const Auth = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -23,7 +22,7 @@ const Auth = () => {
         const payload = isLogin ? { Email: email, password } : { username: name, email, password };
     
         try {
-            const response = await axios.post(targetUrl, payload, { withCredentials: true });
+            const response = await apiRequest(targetUrl, { method: 'POST', body: payload });
     
             if (isLogin) {
                 localStorage.setItem('userName', response.data.name);

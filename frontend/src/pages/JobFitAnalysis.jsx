@@ -34,10 +34,6 @@ export default function JobFitAnalysis() {
       }));
     };
 
-    if (state?.analysis) {
-      setAnalysis({ ...EMPTY_ANALYSIS, ...state.analysis });
-    }
-
     window.addEventListener("job-fit-analysis-update", handleUpdate);
 
     return () => {

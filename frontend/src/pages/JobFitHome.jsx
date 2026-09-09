@@ -67,7 +67,8 @@ export default function JobFitHome() {
           syncAnalysis({ ...analysis });
         },
         {
-          requiredEvents: ["match_score", "summary", "matched_skills", "missing_skills", "skill_gaps", "recommendations", "complete"]
+          requiredEvents: ["match_score", "summary", "matched_skills", "missing_skills", "skill_gaps", "recommendations", "complete"],
+          errorFallback: "Job-fit analysis failed."
         }
       );
 

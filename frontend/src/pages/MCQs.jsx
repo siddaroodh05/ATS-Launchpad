@@ -19,17 +19,6 @@ export default function QuizPage() {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(900);
 
-  if (error) {
-    return (
-      <div className="loading-container">
-        <p>{error}</p>
-        <button className="submit-btn" onClick={() => navigate("/skill-test")}>
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -89,6 +78,10 @@ export default function QuizPage() {
   }, [answerByQuestion, navigate, questionss, selectedAnswers, timeLeft]);
 
   useEffect(() => {
+    if (error || unavailable || !questionss.length || !Object.keys(answerByQuestion).length) {
+      return undefined;
+    }
+
     if (timeLeft === 0) {
       handleSubmit();
       return undefined;
@@ -96,7 +89,18 @@ export default function QuizPage() {
 
     const timer = setInterval(() => setTimeLeft(prev => (prev > 0 ? prev - 1 : 0)), 1000);
     return () => clearInterval(timer);
-  }, [handleSubmit, timeLeft]);
+  }, [answerByQuestion, error, handleSubmit, questionss.length, timeLeft, unavailable]);
+
+  if (error) {
+    return (
+      <div className="loading-container">
+        <p>{error}</p>
+        <button className="submit-btn" onClick={() => navigate("/skill-test")}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

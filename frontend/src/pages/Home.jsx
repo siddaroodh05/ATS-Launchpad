@@ -1,10 +1,11 @@
 import React from 'react';
 import { FileText, Brain, Target, HelpCircle, Sparkles, LogOut } from "lucide-react";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import "../styles/Home.css";
-import { ENDPOINTS } from "../api";
+import { apiRequest, ENDPOINTS } from "../api";
+
+const MotionDiv = motion.div;
 
 export default function Home() {
     const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function Home() {
 
     const handleLogout = async () => {
         try {
-            await axios.post(ENDPOINTS.LOGOUT, {}, { withCredentials: true });
+            await apiRequest(ENDPOINTS.LOGOUT, { method: "POST", body: {} });
         } finally {
             localStorage.removeItem("userName");
             localStorage.removeItem("userEmail");
@@ -51,9 +52,9 @@ export default function Home() {
                 </div>
             </nav>
 
-            
+
             <section className="hero">
-                <motion.div className="hero-text" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+                <MotionDiv className="hero-text" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                     <h2>Propel Your Career with <span>ATSLaunchpad</span></h2>
                     <p>
                         The ultimate AI-powered suite: <strong>Analyze</strong> your resume,
@@ -63,12 +64,12 @@ export default function Home() {
                     <div className="hero-buttons">
                         <button className="btn-primary" onClick={() => navigate("/upload")}>Get Started</button>
                     </div>
-                </motion.div>
+                </MotionDiv>
 
-                <motion.div className="hero-preview" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}>
+                <MotionDiv className="hero-preview" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}>
                     <p className="preview-label">Preview</p>
                     <div className="preview-box">Resume Analysis Dashboard</div>
-                </motion.div>
+                </MotionDiv>
             </section>
 
             <section className="features">

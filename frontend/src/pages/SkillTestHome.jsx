@@ -33,7 +33,8 @@ export default function SkillTestHome() {
           answers = data.items || [];
         }
       }, {
-        requiredEvents: ["question", "answers", "complete"]
+        requiredEvents: ["question", "answers", "complete"],
+        errorFallback: "Skill test generation failed."
       });
 
       if (questions.length !== 10 || answers.length !== 10) {
