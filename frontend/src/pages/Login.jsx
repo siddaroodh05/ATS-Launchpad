@@ -25,15 +25,21 @@ const Auth = () => {
             const response = await apiRequest(targetUrl, { method: 'POST', body: payload });
     
             if (isLogin) {
-                localStorage.setItem('userName', response.data.name);
-                localStorage.setItem('userEmail', response.data.email);
+                const user = response?.data ?? response;
+                localStorage.setItem('userName', user?.name ?? user?.username ?? '');
+                localStorage.setItem('userEmail', user?.email ?? email);
                 navigate('/');
             } else {
                 setIsLogin(true);
                 alert("Account created successfully! Please sign in.");
             }
         } catch (err) {
-            setError(err.response?.data?.message || err.response?.data?.detail || 'Authentication failed. Please try again.');
+            setError(
+                err.message ||
+                err.response?.data?.message ||
+                err.response?.data?.detail ||
+                'Authentication failed. Please try again.'
+            );
         } finally {
             // 3. Stop loading regardless of success or failure
             setIsLoading(false); 

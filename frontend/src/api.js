@@ -50,7 +50,13 @@ export async function apiRequest(endpoint, { method = "GET", body, signal } = {}
     }
 
     const responseText = await response.text();
-    return responseText ? JSON.parse(responseText) : null;
+    if (!responseText) return null;
+
+    try {
+        return JSON.parse(responseText);
+    } catch {
+        return responseText;
+    }
 }
 
 export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
@@ -68,61 +74,67 @@ export async function streamMultipart(endpoint, fields, onEvent, options = {}) {
         formData.append(name, value);
     });
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-        signal: controller.signal
-    });
-
-    if (!response.ok) {
-        handleAuthenticationFailure(response.status);
-        const message = await response.text();
-        throw new Error(getErrorMessage(message, `Request failed with status ${response.status}`));
-    }
-
-    if (!response.body) {
-        throw new Error(errorFallback);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    const processEvent = (rawEvent) => {
-        let eventName = "message";
-        const dataLines = [];
-
-        rawEvent.split(/\r?\n/).forEach((line) => {
-            if (line.startsWith("event:")) {
-                eventName = line.slice(6).trim();
-            } else if (line.startsWith("data:")) {
-                dataLines.push(line.slice(5).trimStart());
-            }
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+            signal: controller.signal
         });
 
-        if (!dataLines.length) {
-            return;
+        if (!response.ok) {
+            handleAuthenticationFailure(response.status);
+            const message = await response.text();
+            throw new Error(getErrorMessage(message, `Request failed with status ${response.status}`));
         }
 
-        const dataText = dataLines.join("\n");
-        let data;
-
-        try {
-            data = JSON.parse(dataText);
-        } catch {
-            throw new Error(getErrorMessage(dataText, "The server returned invalid analysis data."));
+        if (!response.body) {
+            throw new Error(errorFallback);
         }
 
-        if (data?.error) {
-            throw new Error(getErrorMessage(data, errorFallback));
-        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-        receivedEvents.add(eventName);
-        onEvent(eventName, data);
-    };
+        const processEvent = (rawEvent) => {
+            let eventName = "message";
+            const dataLines = [];
 
-    try {
+            rawEvent.split(/\r?\n/).forEach((line) => {
+                if (line.startsWith("event:")) {
+                    eventName = line.slice(6).trim();
+                } else if (line.startsWith("data:")) {
+                    dataLines.push(line.slice(5).trimStart());
+                }
+            });
+
+            if (!dataLines.length) {
+                return;
+            }
+
+            const dataText = dataLines.join("\n");
+            if (!dataText.trim()) {
+                receivedEvents.add(eventName);
+                onEvent(eventName, null);
+                return;
+            }
+
+            let data;
+
+            try {
+                data = JSON.parse(dataText);
+            } catch {
+                throw new Error(getErrorMessage(dataText, "The server returned invalid analysis data."));
+            }
+
+            if (data?.error) {
+                throw new Error(getErrorMessage(data, errorFallback));
+            }
+
+            receivedEvents.add(eventName);
+            onEvent(eventName, data);
+        };
+
         while (true) {
             const { value, done } = await reader.read();
             buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
