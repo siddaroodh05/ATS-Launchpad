@@ -16,17 +16,6 @@ application-secrets.yml
 *.jks
 *.keystore
 
-# Maven and Java build output
-target/
-.mvn/wrapper/maven-wrapper.jar
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-myenv/
-
 # Local editor and backup files
 .idea/
 .vscode/
