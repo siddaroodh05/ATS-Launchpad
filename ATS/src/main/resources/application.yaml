@@ -3,10 +3,13 @@ spring:
     name: ATS
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ATSLaunchpad
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ATSLaunchpad}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+server:
+  port: ${PORT:8080}
 
   jpa:
     hibernate:
@@ -16,7 +19,6 @@ spring:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
   ai:
     openai:
       api-key: ${GROQ_API_KEY}
