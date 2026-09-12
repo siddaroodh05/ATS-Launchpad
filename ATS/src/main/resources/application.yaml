@@ -8,9 +8,6 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-server:
-  port: ${PORT:8080}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -26,6 +23,9 @@ server:
       chat:
         model: openai/gpt-oss-20b
         temperature: 0.2
+
+server:
+  port: ${PORT:8080}
 
 app:
   auth:
